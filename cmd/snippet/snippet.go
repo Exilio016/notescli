@@ -17,7 +17,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package snippet
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/exec"
@@ -34,6 +37,7 @@ import (
 type Snippet struct {
 	name string
 	content string
+	inputs []string
 }
 
 var snippets = []Snippet{}
@@ -50,11 +54,11 @@ var SnippetCmd = &cobra.Command{
 		cobra.CheckErr(err)
 		isTmux, err := cmd.Flags().GetBool("tmux")
 		cobra.CheckErr(err)
-		
 		for _,i := range searchKeys() {
-			clipboard.WriteAll(snippets[i].content)
+			result := handleInputs(snippets[i])
+			clipboard.WriteAll(result)
 			if needToPrint {
-				fmt.Print(snippets[i].content)
+				fmt.Print(result)
 			}
 			if isTmux {
 				cmd := exec.Command("tmux", "load-buffer", "-w", "-")
@@ -62,12 +66,30 @@ var SnippetCmd = &cobra.Command{
 				cobra.CheckErr(err)
 				go func() {
 					defer in.Close()
-					io.WriteString(in, snippets[i].content)
+					io.WriteString(in, result)
 				}()
 				cobra.CheckErr(cmd.Run())
 			}
 		}
 	},
+}
+
+func handleInputs(snippet Snippet) string {
+	result := snippet.content
+	writter := bytes.NewBufferString("")
+	if len(snippet.inputs) > 0 {
+		templ := template.Must(template.New("result").Parse(result))
+		values := map[string]string{}
+		reader := bufio.NewReader(os.Stdin)
+		for _,in := range snippet.inputs {
+			fmt.Printf("Please provide value for \"%s\": ", in)
+			value,_ := reader.ReadString('\n')
+			values[in] = value[:len(value)-1]
+		}
+		templ.Execute(writter, values)
+		result = writter.String()
+	}
+	return result
 }
 
 func init() {
@@ -112,7 +134,8 @@ func processFilesInDir(dir *os.File) {
 
 func parseContent(content string, filename string) {
 	keyRegex := regexp.MustCompile("(?m)\\s*#{3} (.*)$")
-	valueRegex := regexp.MustCompile("(?s)\\x60{3}\\w*(.*?)(?:\\x60\\x60\\x60)")
+	valueRegex := regexp.MustCompile("(?s)(INPUTS:\\n(?:- (?:\\w+)\\n)+)*\\x60{3}\\w*(.*?)(?:\\x60\\x60\\x60)")
+	inputRegex := regexp.MustCompile("(?m)-\\s+(\\w+)\\s*$")
 
 	keys := keyRegex.FindAllStringSubmatch(content, -1)
 	values := valueRegex.FindAllStringSubmatch(content, -1)
@@ -125,8 +148,15 @@ func parseContent(content string, filename string) {
 	for i := 0; i < len; i++ {
 		mutex.Lock()
 		key := keys[i][1]
-		value := strings.Trim(values[i][1], "\r\n\t ")
-		snippets = append(snippets, Snippet{key, value})
+		input := values[i][1]
+		list := []string{}
+		inputs := inputRegex.FindAllStringSubmatch(input, -1)
+		for _, in := range inputs {
+			value := strings.Trim(in[1], "\r\n\t ")
+			list = append(list, value)
+		}
+		value := strings.Trim(values[i][2], "\r\n\t ")
+		snippets = append(snippets, Snippet{key, value, list})
 		mutex.Unlock()
 	}
 }
