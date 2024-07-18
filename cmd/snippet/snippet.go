@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -45,11 +46,33 @@ var SnippetCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		dir := getSnippetDir()
 		processFilesInDir(dir)
+		needToPrint, err := cmd.Flags().GetBool("print")
+		cobra.CheckErr(err)
+		isTmux, err := cmd.Flags().GetBool("tmux")
+		cobra.CheckErr(err)
 		
 		for _,i := range searchKeys() {
 			clipboard.WriteAll(snippets[i].content)
+			if needToPrint {
+				fmt.Print(snippets[i].content)
+			}
+			if isTmux {
+				cmd := exec.Command("tmux", "load-buffer", "-w", "-")
+				in, err := cmd.StdinPipe()
+				cobra.CheckErr(err)
+				go func() {
+					defer in.Close()
+					io.WriteString(in, snippets[i].content)
+				}()
+				cobra.CheckErr(cmd.Run())
+			}
 		}
 	},
+}
+
+func init() {
+	SnippetCmd.Flags().BoolP("print", "p", false, "Print selected snippet insted of just copying it")
+	SnippetCmd.Flags().BoolP("tmux", "t", false, "Store selected snippet to tmux buffer -")
 }
 
 func getSnippetDir() *os.File {
