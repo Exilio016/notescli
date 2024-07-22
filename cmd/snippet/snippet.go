@@ -37,7 +37,12 @@ import (
 type Snippet struct {
 	name string
 	content string
-	inputs []string
+	inputs []Input
+}
+
+type Input struct {
+	name string
+	defaultValue string
 }
 
 var snippets = []Snippet{}
@@ -82,9 +87,17 @@ func handleInputs(snippet Snippet) string {
 		values := map[string]string{}
 		reader := bufio.NewReader(os.Stdin)
 		for _,in := range snippet.inputs {
-			fmt.Printf("Please provide value for \"%s\": ", in)
+			if in.defaultValue != "" {
+				fmt.Printf("Please provide value for \"%s\" or press enter for default \"%s\": ", in.name, in.defaultValue)
+			} else {
+				fmt.Printf("Please provide value for \"%s\": ", in.name)
+			}
 			value,_ := reader.ReadString('\n')
-			values[in] = value[:len(value)-1]
+			if value == "\n" {
+				values[in.name] = in.defaultValue
+			} else {
+				values[in.name] = value[:len(value)-1]
+			}
 		}
 		templ.Execute(writter, values)
 		result = writter.String()
@@ -152,8 +165,8 @@ func processFilesInDir(dir *os.File) {
 
 func parseContent(content string, filename string) {
 	keyRegex := regexp.MustCompile("(?m)\\s*#{3} (.*)$")
-	valueRegex := regexp.MustCompile("(?s)(INPUTS:\\n(?:- (?:\\w+)\\n)+)*\\x60{3}\\w*(.*?)(?:\\x60\\x60\\x60)")
-	inputRegex := regexp.MustCompile("(?m)-\\s+(\\w+)\\s*$")
+	valueRegex := regexp.MustCompile("(?s)(INPUTS:\\n(?:- (?:\\w+(?::[^\\n]+)*)\\n)+)*\\x60{3}\\w*(.*?)(?:\\x60\\x60\\x60)")
+	inputRegex := regexp.MustCompile("(?m)-\\s+(\\w+)\\s*(?::\\s*(.+))*$")
 
 	keys := keyRegex.FindAllStringSubmatch(content, -1)
 	values := valueRegex.FindAllStringSubmatch(content, -1)
@@ -167,11 +180,12 @@ func parseContent(content string, filename string) {
 		mutex.Lock()
 		key := keys[i][1]
 		input := values[i][1]
-		list := []string{}
+		list := []Input{}
 		inputs := inputRegex.FindAllStringSubmatch(input, -1)
 		for _, in := range inputs {
-			value := strings.Trim(in[1], "\r\n\t ")
-			list = append(list, value)
+			name := strings.Trim(in[1], "\r\n\t ")
+			defaultValue := in[2]
+			list = append(list, Input{name, defaultValue})
 		}
 		value := strings.Trim(values[i][2], "\r\n\t ")
 		snippets = append(snippets, Snippet{key, value, list})
