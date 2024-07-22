@@ -112,7 +112,25 @@ func searchKeys() []int {
 	cobra.CheckErr(err)
 	res, err := f.Find(&snippets, func(i int) string { return snippets[i].name }, 
 		fzf.WithPreviewWindow(func(i, width, height int) string {
-			return snippets[i].content
+			contentHeight := 0
+			truncateSize := len(snippets[i].content)
+			currentWidth := 0
+			for index, c := range snippets[i].content {
+				currentWidth++
+				if c == '\n' {
+					contentHeight++
+					// currentWidth = 0 - Removed this line as it seems go-fzf preview is not reseting the width count after \n
+				}
+				if currentWidth >= width {
+					contentHeight++
+					currentWidth = 0
+				}
+				if contentHeight == height {
+					truncateSize = index - 1
+					break
+				}
+			}
+			return snippets[i].content[0:truncateSize] //snippets[i].content[:truncateSize]
 	}))
 	cobra.CheckErr(err)
 	return res
