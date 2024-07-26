@@ -164,7 +164,7 @@ func processFilesInDir(dir *os.File) {
 }
 
 func parseContent(content string, filename string) {
-	keyRegex := regexp.MustCompile("(?m)\\s*#{3} (.*)$")
+	keyRegex := regexp.MustCompile("(?m)^\\s*#{3} (.*)$")
 	valueRegex := regexp.MustCompile("(?s)(INPUTS:\\n(?:- (?:\\w+(?::[^\\n]+)*)\\n)+)*\\x60{3}\\w*(.*?)(?:\\x60\\x60\\x60)")
 	inputRegex := regexp.MustCompile("(?m)-\\s+(\\w+)\\s*(?::\\s*(.+))*$")
 
