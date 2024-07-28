@@ -35,13 +35,13 @@ import (
 )
 
 type Snippet struct {
-	name string
+	name    string
 	content string
-	inputs []Input
+	inputs  []Input
 }
 
 type Input struct {
-	name string
+	name         string
 	defaultValue string
 }
 
@@ -49,9 +49,9 @@ var snippets = []Snippet{}
 var mutex sync.Mutex
 
 var SnippetCmd = &cobra.Command{
-	Use: "snippet",
+	Use:   "snippet",
 	Short: "Find and copy a snippet of code",
-	Long: "An fzf-like menu to find a snippet of code and copy it to clipboard",
+	Long:  "An fzf-like menu to find a snippet of code and copy it to clipboard",
 	Run: func(cmd *cobra.Command, args []string) {
 		dir := getSnippetDir()
 		processFilesInDir(dir)
@@ -59,7 +59,7 @@ var SnippetCmd = &cobra.Command{
 		cobra.CheckErr(err)
 		isTmux, err := cmd.Flags().GetBool("tmux")
 		cobra.CheckErr(err)
-		for _,i := range searchKeys() {
+		for _, i := range searchKeys() {
 			result := handleInputs(snippets[i])
 			clipboard.WriteAll(result)
 			if needToPrint {
@@ -86,13 +86,13 @@ func handleInputs(snippet Snippet) string {
 		templ := template.Must(template.New("result").Parse(result))
 		values := map[string]string{}
 		reader := bufio.NewReader(os.Stdin)
-		for _,in := range snippet.inputs {
+		for _, in := range snippet.inputs {
 			if in.defaultValue != "" {
 				fmt.Printf("Please provide value for \"%s\" or press enter for default \"%s\": ", in.name, in.defaultValue)
 			} else {
 				fmt.Printf("Please provide value for \"%s\": ", in.name)
 			}
-			value,_ := reader.ReadString('\n')
+			value, _ := reader.ReadString('\n')
 			if value == "\n" {
 				values[in.name] = in.defaultValue
 			} else {
@@ -123,7 +123,7 @@ func getSnippetDir() *os.File {
 func searchKeys() []int {
 	f, err := fzf.New(fzf.WithHotReload(&mutex))
 	cobra.CheckErr(err)
-	res, err := f.Find(&snippets, func(i int) string { return snippets[i].name }, 
+	res, err := f.Find(&snippets, func(i int) string { return snippets[i].name },
 		fzf.WithPreviewWindow(func(i, width, height int) string {
 			contentHeight := 0
 			truncateSize := len(snippets[i].content)
@@ -144,7 +144,7 @@ func searchKeys() []int {
 				}
 			}
 			return snippets[i].content[0:truncateSize] //snippets[i].content[:truncateSize]
-	}))
+		}))
 	cobra.CheckErr(err)
 	return res
 }
@@ -152,7 +152,7 @@ func searchKeys() []int {
 func processFilesInDir(dir *os.File) {
 	children, err := dir.Readdir(0)
 	cobra.CheckErr(err)
-	for _,stat := range children {
+	for _, stat := range children {
 		if !stat.IsDir() {
 			if f, err := os.Open(dir.Name() + "/" + stat.Name()); err == nil {
 				if content, err := io.ReadAll(f); err == nil {
@@ -192,4 +192,3 @@ func parseContent(content string, filename string) {
 		mutex.Unlock()
 	}
 }
-
