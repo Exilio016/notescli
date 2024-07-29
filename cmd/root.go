@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"log"
+	"notescli/cmd/add"
 	"notescli/cmd/snippet"
 	"os"
 
@@ -50,15 +51,28 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
-			"config file (default is $HOME/.config/notescli/config.yaml)")
+		"config file (default is $HOME/.config/notescli/config.yaml)")
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	
+
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
-	viper.SetDefault("snippetsdir", home + "/Notes/snippets")
+	viper.SetDefault("snippetsdir", home+"/Notes/snippets")
+	viper.SetDefault("inboxdir", home+"/Notes/inbox")
 	viper.SetDefault("editor", "vim")
+	viper.SetDefault("template", `---
+date: {{.date}}
+tags:
+	-
+hubs:
+	- "[[]]"
+references:
+	-
+---
+# {{.name}}
+	`)
 
 	rootCmd.AddCommand(snippet.SnippetCmd)
+	rootCmd.AddCommand(add.AddCmd)
 }
 
 func initConfig() {
@@ -78,5 +92,3 @@ func initConfig() {
 		log.Println(err)
 	}
 }
-
-
