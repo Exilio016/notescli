@@ -1,8 +1,11 @@
 package add
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 	"text/template"
 	"time"
 
@@ -19,13 +22,17 @@ var AddCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		now := time.Now()
 		if name == "" {
+			reader := bufio.NewReader(os.Stdin)
 			fmt.Print("Name of new note file: ")
-			fmt.Scanf("%s\n", &name)
+
+			line, err := reader.ReadString('\n')
+			cobra.CheckErr(err)
+			name = strings.Trim(line, " \t\r\n")
 		}
 		path := viper.GetString("inboxdir")
-		file, err := os.Create(path + "/" + now.Format("2006-01-02 15:04") + " - " + name + ".md")
+		notePath := path + "/" + now.Format("2006-01-02 15:04") + " - " + name + ".md"
+		file, err := os.Create(notePath)
 		cobra.CheckErr(err)
-		defer file.Close()
 
 		values := make(map[string]string)
 		values["name"] = name
