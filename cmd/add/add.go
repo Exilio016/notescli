@@ -42,9 +42,23 @@ var AddCmd = &cobra.Command{
 		templ := template.Must(template.New("note").Parse(templateStr))
 
 		templ.Execute(file, values)
+		file.Close()
+
+		open, _ := cmd.Flags().GetBool("open")
+		if open {
+			editor := viper.GetString("editor")
+			cmd := exec.Command(editor, notePath)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Run()
+		} else {
+			fmt.Println("Note created at", notePath)
+		}
 	},
 }
 
 func init() {
 	AddCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the note file")
+	AddCmd.Flags().BoolP("open", "o", false, "Open the note file after creation")
 }
