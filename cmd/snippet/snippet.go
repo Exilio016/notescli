@@ -28,6 +28,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/atotto/clipboard"
 	"github.com/koki-develop/go-fzf"
 	"github.com/spf13/cobra"
@@ -83,7 +84,7 @@ func handleInputs(snippet Snippet) string {
 	result := snippet.content
 	writter := bytes.NewBufferString("")
 	if len(snippet.inputs) > 0 {
-		templ := template.Must(template.New("result").Parse(result))
+		templ := template.Must(template.New("result").Funcs(sprig.FuncMap()).Parse(result))
 		values := map[string]string{}
 		reader := bufio.NewReader(os.Stdin)
 		for _, in := range snippet.inputs {
@@ -153,7 +154,7 @@ func processFilesInDir(dir *os.File) {
 	children, err := dir.Readdir(0)
 	cobra.CheckErr(err)
 	for _, stat := range children {
-		if !stat.IsDir() {
+		if !stat.IsDir() && stat.Name() != "README.md" {
 			if f, err := os.Open(dir.Name() + "/" + stat.Name()); err == nil {
 				if content, err := io.ReadAll(f); err == nil {
 					go parseContent(string(content), stat.Name())
