@@ -57,6 +57,7 @@
 
             vendorHash = "sha256-mCMHOXNJVupZ/g2QDVEySiel1ZKH/CB7LBbJFyq1D78=";
           };
+          default = self.packages.${system}.notescli;
         }
       );
 
