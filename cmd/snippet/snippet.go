@@ -98,7 +98,7 @@ func handleInputs(snippet Snippet) string {
 			if value == "" {
 				values[in.name] = in.defaultValue
 			} else {
-				values[in.name] = value[:len(value)-1]
+				values[in.name] = value
 			}
 		}
 		templ.Execute(writter, values)
