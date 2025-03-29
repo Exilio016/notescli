@@ -17,7 +17,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 package snippet
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/atotto/clipboard"
+	"github.com/chzyer/readline"
 	"github.com/koki-develop/go-fzf"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -86,15 +86,16 @@ func handleInputs(snippet Snippet) string {
 	if len(snippet.inputs) > 0 {
 		templ := template.Must(template.New("result").Funcs(sprig.FuncMap()).Parse(result))
 		values := map[string]string{}
-		reader := bufio.NewReader(os.Stdin)
 		for _, in := range snippet.inputs {
+			prompt := fmt.Sprintf("Please provide value for \"%s\": ", in.name)
 			if in.defaultValue != "" {
-				fmt.Printf("Please provide value for \"%s\" or press enter for default \"%s\": ", in.name, in.defaultValue)
-			} else {
-				fmt.Printf("Please provide value for \"%s\": ", in.name)
+				prompt = fmt.Sprintf("Please provide value for \"%s\" or press enter for default \"%s\": ", in.name, in.defaultValue)
 			}
-			value, _ := reader.ReadString('\n')
-			if value == "\n" {
+			rl, err := readline.New(prompt)
+			cobra.CheckErr(err)
+			defer rl.Close()
+			value, _ := rl.Readline()
+			if value == "" {
 				values[in.name] = in.defaultValue
 			} else {
 				values[in.name] = value[:len(value)-1]

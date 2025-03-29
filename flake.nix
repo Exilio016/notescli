@@ -55,7 +55,7 @@
             # remember to bump this hash when your dependencies change.
             # vendorHash = pkgs.lib.fakeHash;
 
-            vendorHash = "sha256-mCMHOXNJVupZ/g2QDVEySiel1ZKH/CB7LBbJFyq1D78=";
+            vendorHash = "sha256-1flX3E8y8MSMDvdagyfV0cDP5NzPnhE46UokL5/+Ek0=";
           };
           default = self.packages.${system}.notescli;
         }
