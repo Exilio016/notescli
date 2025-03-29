@@ -1,7 +1,6 @@
 package add
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,6 +8,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/chzyer/readline"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,10 +22,11 @@ var AddCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		now := time.Now()
 		if name == "" {
-			reader := bufio.NewReader(os.Stdin)
-			fmt.Print("Name of new note file: ")
+			rl, err := readline.New("Name of new note file: ")
+			cobra.CheckErr(err)
+			defer rl.Close()
 
-			line, err := reader.ReadString('\n')
+			line, err := rl.Readline()
 			cobra.CheckErr(err)
 			name = strings.Trim(line, " \t\r\n")
 		}
