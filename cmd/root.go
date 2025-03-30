@@ -19,6 +19,7 @@ package cmd
 import (
 	"log"
 	"notescli/cmd/add"
+	"notescli/cmd/search"
 	"notescli/cmd/snippet"
 	"os"
 
@@ -73,6 +74,7 @@ references:
 
 	rootCmd.AddCommand(snippet.SnippetCmd)
 	rootCmd.AddCommand(add.AddCmd)
+	rootCmd.AddCommand(search.SearchCmd)
 }
 
 func initConfig() {
