@@ -94,7 +94,8 @@ func handleInputs(snippet Snippet) string {
 			rl, err := readline.New(prompt)
 			cobra.CheckErr(err)
 			defer rl.Close()
-			value, _ := rl.Readline()
+			value, err := rl.Readline()
+			cobra.CheckErr(err)
 			if value == "" {
 				values[in.name] = in.defaultValue
 			} else {
