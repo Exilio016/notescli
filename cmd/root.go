@@ -53,7 +53,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
 		"config file (default is $HOME/.config/notescli/config.yaml)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
