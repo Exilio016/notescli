@@ -46,7 +46,7 @@ var AddCmd = &cobra.Command{
 			cobra.CheckErr(err)
 			name = strings.Trim(line, " \t\r\n")
 		}
-		path := viper.GetString("inboxdir")
+		path := viper.GetString("vault")
 		notePath := path + "/" + now.Format("2006-01-02 15:04") + " - " + name + ".md"
 		file, err := os.Create(notePath)
 		cobra.CheckErr(err)

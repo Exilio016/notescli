@@ -57,7 +57,7 @@ func init() {
 	home, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 	viper.SetDefault("snippetsdir", home+"/Notes/snippets")
-	viper.SetDefault("inboxdir", home+"/Notes/inbox")
+	viper.SetDefault("vault", home+"/Notes/vault")
 	viper.SetDefault("editor", "vim")
 	viper.SetDefault("template", `---
 date: {{.date}}
