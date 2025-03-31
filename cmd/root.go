@@ -62,11 +62,11 @@ func init() {
 	viper.SetDefault("template", `---
 date: {{.date}}
 tags:
-	-
+-
 hubs:
-	- "[[]]"
+- "[[]]"
 references:
-	-
+-
 ---
 # {{.name}}
 	`)
